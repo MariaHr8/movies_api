@@ -1,43 +1,74 @@
 import './App.css';
-import react from 'react';
-import movie from './movie';
+import movieCons from './movie';
+import { useState, useEffect } from 'react';
+import Layout from './components/Layout';
+import { Routes, Route } from 'react-router-dom';
+import Home from './components/home/Home';
+import Header from './components/header/Header';
+import Trailer from './components/trailer/Trailer';
+import Reviews from './components/reviews/Reviews';
+import NotFound from './components/notFound/NotFound';
 
-class App extends react.Component {
-  state = {
-    movies: []
-  };
+function App() {
+  const [movies, setMovies] = useState();
+  const [movie, setMovie] = useState();
+  const [reviews, setReviews] = useState([]);
 
-  async componentDidMount() {
-    const response = await fetch('/api/v1/movies');
-    const body = await response.json();
 
-    var newMovies = body.map(jsonmovie => {
-      return new movie(jsonmovie["id"], jsonmovie["imdbId"], jsonmovie["title"],
+  const getMovies = async () => {
+    try {
+      const response = await fetch('/api/v1/movies');
+      const body = await response.json();
+
+      var newMovies = body.map(jsonmovie => {
+        return new movieCons(jsonmovie["id"], jsonmovie["imdbId"], jsonmovie["title"],
+          jsonmovie["releaseDate"], jsonmovie["trailerLink"], jsonmovie["genres"],
+          jsonmovie["poster"], jsonmovie["backdrops"], jsonmovie["reviewIds"]);
+      });
+
+      setMovies(newMovies);
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const getMovieData = async (movieId) => {
+
+    try {
+      const response = await fetch(`/api/v1/movies/${movieId}`);
+      const jsonmovie = await response.json();
+
+      var newMovie = new movieCons(jsonmovie["id"], jsonmovie["imdbId"], jsonmovie["title"],
         jsonmovie["releaseDate"], jsonmovie["trailerLink"], jsonmovie["genres"],
         jsonmovie["poster"], jsonmovie["backdrops"], jsonmovie["reviewIds"]);
-    });
 
-    this.setState({ movies: newMovies });
+      setMovie(newMovie);
+      setReviews(newMovie.reviewIds);
+    }
+    catch (error) {
+      console.error(error);
+    }
+
   }
 
-  render() {
-    const { movies } = this.state;
+  useEffect(() => {
+    getMovies();
+  }, [])
 
-    return (
-      <div className='App'>
-        <header className="App-header">
-          <div className="App-intro">
-            <h2>Movies</h2>
-            {movies.map(movie =>
-              <div key={movie.imdbId}>
-                {movie.title}
-              </div>
-            )}
-          </div>
-        </header>
-      </div>
-    );
-  }
+  return (
+    <div className='App'>
+      <Header />
+      <Routes>
+        <Route path='/' element={<Layout />}>
+          <Route path="/" element={<Home movies={movies} />} ></Route>
+          <Route path="/Trailer/:ytTrailerId" element={<Trailer />}></Route>
+          <Route path="/Reviews/:movieId" element={<Reviews getMovieData={getMovieData} movie={movie} reviews={reviews} setReviews={setReviews} />}></Route>
+          <Route path="*" element={<NotFound />}></Route>
+        </Route>
+      </Routes>
+    </div>
+  );
 }
 
 export default App;
