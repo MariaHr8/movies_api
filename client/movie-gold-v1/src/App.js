@@ -1,31 +1,43 @@
 import './App.css';
-import api from './api/axiosConfig';
-import { useState, useEffect } from 'react';
+import react from 'react';
+import movie from './movie';
 
-function App() {
+class App extends react.Component {
+  state = {
+    movies: []
+  };
 
-  const [movies, setMovies] = useState();
+  async componentDidMount() {
+    const response = await fetch('/api/v1/movies');
+    const body = await response.json();
 
-  const getMovies = async () => {
-    try {
-      const response = await api.get('/api/v1/movies');
-      response.headers.set()
-      console.log(response.data);
-      setMovies(response.data);
-    } catch (err) {
-      console.log(err);
-    }
+    var newMovies = body.map(jsonmovie => {
+      return new movie(jsonmovie["id"], jsonmovie["imdbId"], jsonmovie["title"],
+        jsonmovie["releaseDate"], jsonmovie["trailerLink"], jsonmovie["genres"],
+        jsonmovie["poster"], jsonmovie["backdrops"], jsonmovie["reviewIds"]);
+    });
+
+    this.setState({ movies: newMovies });
   }
 
-  useEffect(() => {
-    getMovies();
-  }, []);
+  render() {
+    const { movies } = this.state;
 
-  return (
-    <div className="App">
-
-    </div>
-  );
+    return (
+      <div className='App'>
+        <header className="App-header">
+          <div className="App-intro">
+            <h2>Movies</h2>
+            {movies.map(movie =>
+              <div key={movie.imdbId}>
+                {movie.title}
+              </div>
+            )}
+          </div>
+        </header>
+      </div>
+    );
+  }
 }
 
 export default App;
