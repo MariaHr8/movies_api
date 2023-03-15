@@ -12,5 +12,7 @@ Start up the SpringBoot application by navigating to the root of the project via
 mvn spring-boot:run
 ```
 
-## License
-[MIT](https://choosealicense.com/licenses/mit/)
+## Technology Stack
+- SpringBoot REST API
+- MongoDB
+- React
